@@ -1,3 +1,4 @@
+
 #!/bin/bash
 #
 # CatBox v2.0
@@ -29,31 +30,31 @@
 # SOFTWARE.
 #
 
-VERSION="2.0"
+_version="2.0"
 
-CATBOX_HOST="https://catbox.moe/user/api.php"
-LITTER_HOST="https://litterbox.catbox.moe/resources/internals/api.php"
-HASH_FILE="$HOME/.catbox"
+_catbox_host="https://catbox.moe/user/api.php"
+_litter_host="https://litterbox.catbox.moe/resources/internals/api.php"
+_hash_file="$HOME/.catbox"
 
-CURL_ADD=""
+_curl_add=""
 
-RESET="\e[0m"
-BOLD="\e[1m"
-RED="\e[91m"
-YELLOW="\e[93m"
+_reset="\e[0m"
+_bold="\e[1m"
+_red="\e[91m"
+_yellow="\e[93m"
 
 ## Utils
 
-function no_color() {
-    unset RESET BOLD RED YELLOW
+no_color() {
+    unset _reset _bold _red _yellow   #########???????????
 }
 
-function version() {
-    echo -e $BOLD"CatBox"$RESET" v"$VERSION >&5
+version() {
+    echo -e $_bold"CatBox"$_reset" v"$_version >&5
     echo "A catbox.moe API implementation in Bash"
 }
 
-function usage() {
+usage() {
     [ -z $1 ] && version || echo $1
     echo
     echo "Usage: catbox <command> [arguments] [options]"
@@ -74,42 +75,42 @@ function usage() {
     echo "   -V, --verbose      - Show verbose output (in album)"
 }
 
-function has_hash() {
+has_hash() {
     [ -z "$HASH" ] && [ -z "$USER_HASH" ] && echo false || echo true
 }
 
 ## Command functions
 
-function upload_files() {
+upload_files() {
     declare -i fail=0
     for file in "${@:2}"
     do
         name=$(basename -- "$file")
-        echo -e $BOLD"$name"$RESET":"
+        echo -e $_bold"$name"$_reset":"
         if ! ( [ -f "$file" ] || [ -L "$file" ] || [ "$file" == "-" ] )
         then
-            echo -e $BOLD$RED"File '$file' doesn't exist!"$RESET >&2
+            echo -e $_bold$_red"File '$file' doesn't exist!"$_reset >&2
             fail+=1
             continue
         fi
-        link=$(curl --fail-with-body -F reqtype=fileupload $CURL_ADD -F "fileToUpload=@$file" $1)
+        link=$(curl --fail-with-body -F reqtype=fileupload $_curl_add -F "fileToUpload=@$file" $1)
         if [ $? -ne 0 ]
         then
-            echo -e $BOLD$RED"Failed to upload: "$RESET$RED$link$RESET >&2
+            echo -e $_bold$_red"Failed to upload: "$_reset$_red$link$_reset >&2
             fail+=1
             continue
         fi
         echo -n $link | xclip -selection clipboard
-        echo -en "Uploaded to: "$BOLD
+        echo -en "Uploaded to: "$_bold
         echo $link >&5
-        echo -en $RESET
+        echo -en $_reset
     done
     [ $fail -eq $[$#-1] ] && exit 2
     return 0
 }
 
-function catbox_command() {
-    curl -s --fail-with-body -F reqtype=$1 $CURL_ADD "${@:2}" $CATBOX_HOST &
+catbox_command() {
+    curl -s --fail-with-body -F reqtype=$1 $_curl_add "${@:2}" $_catbox_host &
     pid=$!
     if [ ! $SILENT ]
     then
@@ -140,18 +141,18 @@ function catbox_command() {
     wait $pid
 }
 
-function generic_command() {
+generic_command() {
     declare -i fail=0
     for item in "${@:5}"
     do
-        echo -en $BOLD"$($3 "$item")"$RESET": "
+        echo -en $_bold"$($3 "$item")"$_reset": "
         res=$(catbox_command $1 -F "$2=$item")
         if [ $? -eq 0 ]
         then
             $4 "$res"
         else
-            [ $SILENT ] && echo -en $RED"$item: " >&2 || echo -en "\e[u"
-            echo -e $RED$res$RESET >&2
+            [ $SILENT ] && echo -en $_red"$item: " >&2 || echo -en "\e[u"
+            echo -e $_red$res$_reset >&2
             fail+=1
         fi
     done
@@ -159,30 +160,30 @@ function generic_command() {
     return 0
 }
 
-function url_success() {
+url_success() {
     echo -en "\e[u"
     echo $* >&5
     echo -n $* | xclip -selection clipboard
 }
 
-function upload_urls() {
+upload_urls() {
     generic_command urlupload url "basename -- " url_success $@
 }
 
-function delete_success() {
+delete_success() {
     echo -e "\e[uSuccesfully deleted"
 }
 
-function delete_files() {
+delete_files() {
     echo "Deleting..."
     generic_command deletefiles files echo delete_success $@
 }
 
-function album_usage() {
+album_usage() {
     echo "Usage: catbox album <command> [arguments]"
     echo
-    echo -e $BOLD$YELLOW"Note: Every album command requires user hash"
-    echo -e "      For title or description, double quote every text longer than one word"$RESET
+    echo -e $_bold$_yellow"Note: Every album command requires user hash"
+    echo -e "      For title or description, double quote every text longer than one word"$_reset
     echo
     echo "Commands:"
     echo "   create <title> <description> <file(s)>       - Create album"
@@ -192,7 +193,7 @@ function album_usage() {
     echo "   delete <short>                               - Delete album"
 }
 
-function album_create() { 
+album_create() { 
     files="${@:3}"
     echo "Creating album..."
     if [ $VERBOSE ]
@@ -206,8 +207,8 @@ function album_create() {
     if [ $? -ne 0 ]
     then
         exec >&2
-        echo -e $RED$BOLD"Failed to create a new album!"$RESET
-        echo -e $RED$album$RESET
+        echo -e $_red$_bold"Failed to create a new album!"$_reset
+        echo -e $_red$album$_reset
         exit 2
     fi
 
@@ -222,7 +223,7 @@ function album_create() {
     fi
 }
 
-function album_edit() {
+album_edit() {
     files="${@:4}"
     echo "Modifing album..."
     if [ $VERBOSE ]
@@ -237,15 +238,15 @@ function album_edit() {
     if [ $? -ne 0 ]
     then
         exec >&2
-        echo -e $RED$BOLD"Failed to modify album!"$RESET
-        echo -e $RED$res$RESET
+        echo -e $_red$_bold"Failed to modify album!"$_reset
+        echo -e $_red$res$_reset
         exit 2
     fi
 
     echo -e "\nAlbum modified successfully"
 }
 
-function album_add() {
+album_add() {
     files="${@:2}"
     echo "Adding files to the album..."
     if [ $VERBOSE ]
@@ -258,15 +259,15 @@ function album_add() {
     if [ $? -ne 0 ]
     then
         exec >&2
-        echo -e $RED$BOLD"Failed to add files to the album!"$RESET
-        echo -e $RED$res$RESET
+        echo -e $_red$_bold"Failed to add files to the album!"$_reset
+        echo -e $_red$res$_reset
         exit 2
     fi
 
     echo -e "\nSuccessfully added files to the album"
 }
 
-function album_remove() {
+album_remove() {
     files="${@:2}"
     echo "Removing files from the album..."
     if [ $VERBOSE ]
@@ -279,15 +280,15 @@ function album_remove() {
     if [ $? -ne 0 ]
     then
         exec >&2
-        echo -e $RED$BOLD"Failed to remove files from the album!"$RESET
-        echo -e $RED$res$RESET
+        echo -e $_red$_bold"Failed to remove files from the album!"$_reset
+        echo -e $_red$res$_reset
         exit 2
     fi
 
     echo -e "\nSuccessfully removed files from the album"
 }
 
-function album_delete() {
+album_delete() {
     echo "Deleting albums..."
     generic_command deletealbum short echo delete_success $@
 }
@@ -298,7 +299,7 @@ function album_delete() {
 curl --version >> /dev/null
 if [ $? -ne 0 ]
 then
-    echo -e $RED"cURL not found!"$RESET >&2
+    echo -e $_red"cURL not found!"$_reset >&2
     echo "Please check if you have cURL installed on your system" >&2
     exit 3
 fi
@@ -340,7 +341,7 @@ do
             HASH=${!get}
             set -- "${@:1:$count-1}" "${@:$count+1}"
         fi
-        [ ! -z "$HASH" ] && CURL_ADD="-F userhash=$HASH "
+        [ ! -z "$HASH" ] && _curl_add="-F userhash=$HASH "
         ;;
     -V | --verbose)
         VERBOSE=1
@@ -354,17 +355,17 @@ done
 unset count no_color
 
 # Read user hash if it was not given through global options
-if [ -z ${HASH+x} ] && [ -f $HASH_FILE ]
+if [ -z ${HASH+x} ] && [ -f $_hash_file ]
 then
     while read line
     do
         if [[ $line != \#* ]] && [ "$line" != "" ]
         then
             USER_HASH=$line
-            CURL_ADD="-F userhash=$USER_HASH "
+            _curl_add="-F userhash=$USER_HASH "
             break
         fi
-    done < $HASH_FILE
+    done < $_hash_file
     unset line
 fi
 
@@ -399,10 +400,10 @@ user)
         fi
     elif [ "$2" == "off" ]
     then
-        rm $HASH_FILE
+        rm $_hash_file
         echo "CatBox will now upload annonymously"
     else
-        echo -e "# CatBox v2 User Hash\n$2" > $HASH_FILE
+        echo -e "# CatBox v2 User Hash\n$2" > $_hash_file
         echo "User hash set!"
         echo "CatBox will now upload files to your account"
     fi
@@ -416,7 +417,7 @@ file)
         exit 1
     fi
     [ "$(has_hash)" == "false" ] && echo "Uploading annonymously..." || echo "Uploading..."
-    upload_files $CATBOX_HOST "${@:2}"
+    upload_files $_catbox_host "${@:2}"
     ;;
 temp)
     if [ $# -lt 2 ]
@@ -428,9 +429,9 @@ temp)
         exit 1;
     fi
     [[ ${@: -1:1} == @(1|12|24|72)h ]] && time=${@: -1:1} && end=-1 || time=1h || end=0
-    CURL_ADD="-F time=$time"
+    _curl_add="-F time=$time"
     echo "Uploading temporarily..."
-    upload_files $LITTER_HOST "${@:2:$#-1$end}"
+    upload_files $_litter_host "${@:2:$#-1$end}"
     ;;
 url)
     if [ $# -eq 1 ]
@@ -456,9 +457,9 @@ delete)
     elif [ "$(has_hash)" == "false" ]
     then
         exec >&2
-        echo -e $BOLD$RED"No user hash!"$RESET
-        echo -e $RED"Please add your user hash"
-        echo -e "Use the catbox user command to do so"$RESET
+        echo -e $_bold$_red"No user hash!"$_reset
+        echo -e $_red"Please add your user hash"
+        echo -e "Use the catbox user command to do so"$_reset
         exit 1
     fi
     delete_files ${@:2}
@@ -467,9 +468,9 @@ album)
     if [ $# -gt 1 ] && [ "$(has_hash)" == "false" ]
     then
         exec >&2
-        echo -e $BOLD$RED"No user hash!"$RESET
-        echo -e $RED"Please add your user hash"
-        echo -e "Use the catbox user command to do so"$RESET
+        echo -e $_bold$_red"No user hash!"$_reset
+        echo -e $_red"Please add your user hash"
+        echo -e "Use the catbox user command to do so"$_reset
         exit 1
     fi
     case $2 in
@@ -478,7 +479,7 @@ album)
         then
             exec >&2
             echo "Usage: catbox album create <title> <description> <filename> [<filename> ...] - Create an album with given title, description, and files"
-            echo -e $YELLOW"For title or description, double quote every text longer than one word"$RESET
+            echo -e $_yellow"For title or description, double quote every text longer than one word"$_reset
             echo "Filenames must be the names of files already hosted on catbox.moe"
             exit 1
         fi
@@ -489,8 +490,8 @@ album)
         then
             exec >&2
             echo "Usage: catbox album edit <short> <title> <description> [<filename> ...] - Modify the entirety of the album"
-            echo -e $YELLOW"For title or description, double quote every text longer than one word"
-            echo -e "Filenames are not necessary, but given none, the album will become empty"$RESET
+            echo -e $_yellow"For title or description, double quote every text longer than one word"
+            echo -e "Filenames are not necessary, but given none, the album will become empty"$_reset
             echo "Filenames must be the names of files already hosted on catbox.moe"
             exit 1
         fi
